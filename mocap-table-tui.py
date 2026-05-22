@@ -28,13 +28,13 @@ class MocapTopicHandler:
 
     def _callback(self, msg: PoseStamped) -> None:
         q = msg.pose.orientation
-        rx, ry, rz = np.rad2deg(Rot.from_quat([q.x, q.y, q.z, q.w]).as_euler('xyz'))
-
-        reading = {'x': msg.pose.position.x, 'y': msg.pose.position.y, 'yaw': rz}
+        reading = {
+            'x': msg.pose.position.x,
+            'y': msg.pose.position.y,
+            'quat': [q.x, q.y, q.z, q.w],
+        }
         if self.dim == 3:
             reading['z'] = msg.pose.position.z
-            reading['roll'] = rx
-            reading['pitch'] = ry
 
         with self._lock:
             self._buffer.append(reading)
@@ -46,7 +46,21 @@ class MocapTopicHandler:
 
         if not buf:
             return {k: np.nan for k in self.keys}
-        return {k: np.mean([r[k] for r in buf]) for k in self.keys}
+
+        rx, ry, rz = np.rad2deg(
+            Rot.from_quat([r['quat'] for r in buf]).mean().as_euler('zyx')
+        )
+        result = {
+            'x': np.mean([r['x'] for r in buf]),
+            'y': np.mean([r['y'] for r in buf]),
+            'yaw': rz,
+        }
+        if self.dim == 3:
+            result['z'] = np.mean([r['z'] for r in buf])
+            result['roll'] = rx
+            result['pitch'] = ry
+
+        return result
 
 
 def build_dataframe(handlers: list[MocapTopicHandler]) -> pd.DataFrame:
