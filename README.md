@@ -1,4 +1,4 @@
-# mocap-table
+# mocap-table-tui
 
 A terminal table that displays live mocap poses from ROS 2. For each agent ID
 provided on the command line, it subscribes to `/<ID>/world`
@@ -27,7 +27,7 @@ into that venv.
 ## Usage
 
 ```
-uv run mocap-table.py ID [ID ...] [--dim {2,3}] [--hz HZ]
+uv run mocap-table-tui.py ID [ID ...] [--dim {2,3}] [--hz HZ]
 ```
 
 | Argument | Default | Description |
@@ -40,10 +40,10 @@ uv run mocap-table.py ID [ID ...] [--dim {2,3}] [--hz HZ]
 
 ```bash
 # Monitor three agents at 2 Hz, 3D poses
-uv run mocap-table.py alpha bravo charlie --hz 2
+uv run mocap-table-tui.py alpha bravo charlie --hz 2
 
 # Monitor two agents with 2D poses only
-uv run mocap-table.py alpha bravo --dim 2
+uv run mocap-table-tui.py alpha bravo --dim 2
 ```
 
 Example output:
