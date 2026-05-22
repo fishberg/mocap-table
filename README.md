@@ -35,6 +35,7 @@ uv run mocap-table-tui.py ID [ID ...] [--dim {2,3}] [--hz HZ]
 | `ID [ID ...]` | *(required)* | One or more agent IDs to monitor |
 | `--dim {2,3}` | `3` | Pose dimensions — `3` shows x/y/z/roll/pitch/yaw, `2` shows x/y/yaw |
 | `--hz HZ` | `1.0` | Display refresh rate (Hz); poses are averaged over each interval |
+| `--decimals N` | `3` | Number of decimal places shown in the table |
 
 ## Example
 

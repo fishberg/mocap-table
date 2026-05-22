@@ -13,6 +13,7 @@ from tabulate import tabulate
 
 KEYS_3D = ['x', 'y', 'z', 'roll', 'pitch', 'yaw']
 KEYS_2D = ['x', 'y', 'yaw']
+CLEAR_SCREEN = '\033[2J\033[H'
 
 
 class MocapTopicHandler:
@@ -54,16 +55,17 @@ def build_dataframe(handlers: list[MocapTopicHandler]) -> pd.DataFrame:
     return pd.DataFrame.from_dict(rows, orient='index', columns=keys)
 
 
-class MocapDisplayNode(Node):
-    def __init__(self, agent_ids: list[str], dim: int, hz: float):
-        super().__init__('mocap_display')
+class MocapTableTui(Node):
+    def __init__(self, agent_ids: list[str], dim: int, hz: float, decimals: int):
+        super().__init__('mocap_table_tui')
         self.handlers = [MocapTopicHandler(self, aid, dim) for aid in agent_ids]
+        self.decimals = decimals
         self.create_timer(1.0 / hz, self._display_tick)
 
     def _display_tick(self) -> None:
         df = build_dataframe(self.handlers)
-        output = tabulate(df, headers='keys', tablefmt='psql', floatfmt='.4f')
-        print('\033[2J\033[H' + output, end='', flush=True)
+        output = tabulate(df, headers='keys', tablefmt='psql', floatfmt=f'.{self.decimals}f')
+        print(CLEAR_SCREEN + output, end='', flush=True)
 
 
 def main() -> None:
@@ -71,10 +73,11 @@ def main() -> None:
     parser.add_argument('ids', type=str, nargs='+', help='Agent IDs to monitor (topic: /ID/world)')
     parser.add_argument('--dim', type=int, choices=[2, 3], default=3, help='Pose dimensions (default: 3)')
     parser.add_argument('--hz', type=float, default=1.0, help='Display refresh rate in Hz (default: 1.0)')
+    parser.add_argument('--decimals', type=int, default=3, help='Decimal places to display (default: 3)')
     args = parser.parse_args()
 
     rclpy.init()
-    node = MocapDisplayNode(args.ids, args.dim, args.hz)
+    node = MocapTableTui(args.ids, args.dim, args.hz, args.decimals)
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
