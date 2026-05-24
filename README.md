@@ -1,7 +1,7 @@
-# mocap-table-tui
+# pose-table-tui
 
-A terminal table that displays live mocap poses from ROS 2. For each agent ID
-provided on the command line, it subscribes to `/<ID>/world`
+A terminal table that displays live `PoseStamped` poses from ROS 2. For each topic
+provided on the command line, it subscribes to that topic
 (`geometry_msgs/PoseStamped`), accumulates incoming messages between display
 ticks, and shows the averaged pose in a refreshing table.
 
@@ -27,41 +27,41 @@ into that venv.
 ## Usage
 
 ```
-uv run mocap-table-tui.py ID [ID ...] [--dim {2,3}] [--hz HZ]
+uv run pose-table-tui.py TOPIC [TOPIC ...] [--dim {2,3}] [--hz HZ] [--rotation {zyx,xyz}]
 ```
 
 | Argument | Default | Description |
 |---|---|---|
-| `ID [ID ...]` | *(required)* | One or more agent IDs to monitor |
+| `TOPIC [TOPIC ...]` | *(required)* | One or more full topic paths to monitor |
 | `--dim {2,3}` | `3` | Pose dimensions — `3` shows x/y/z/roll/pitch/yaw, `2` shows x/y/yaw |
 | `--hz HZ` | `1.0` | Display refresh rate (Hz); poses are averaged over each interval |
 | `--decimals N` | `3` | Number of decimal places shown in the table |
+| `--rotation {zyx,xyz}` | `zyx` | Euler rotation convention for decomposing quaternions |
 
 ## Example
 
 ```bash
-# Monitor three agents at 2 Hz, 3D poses
-uv run mocap-table-tui.py alpha bravo charlie --hz 2
+# Monitor three topics at 2 Hz, 3D poses
+uv run pose-table-tui.py /alpha/world /bravo/world /charlie/world --hz 2
 
-# Monitor two agents with 2D poses only
-uv run mocap-table-tui.py alpha bravo --dim 2
+# Monitor two topics with 2D poses only
+uv run pose-table-tui.py /alpha/world /bravo/world --dim 2
+
+# Use xyz Euler convention
+uv run pose-table-tui.py /dlio/odom-node/pose --rotation xyz
 ```
 
 Example output:
 
 ```
-+--------+--------+--------+--------+--------+---------+---------+
-|        |      x |      y |      z |   roll |   pitch |     yaw |
-|--------+--------+--------+--------+--------+---------+---------|
-| alpha  |  1.234 |  0.567 |  0.012 |  0.100 |  -0.200 |  45.300 |
-| bravo  |  3.456 |  2.345 |  0.023 |  0.050 |   0.100 | -12.500 |
-| charlie|    nan |    nan |    nan |    nan |     nan |     nan |
-+--------+--------+--------+--------+--------+---------+---------+
++----------------------+--------+--------+--------+--------+---------+---------+
+|                      |      x |      y |      z |   roll |   pitch |     yaw |
+|----------------------+--------+--------+--------+--------+---------+---------|
+| /alpha/world         |  1.234 |  0.567 |  0.012 |  0.100 |  -0.200 |  45.300 |
+| /bravo/world         |  3.456 |  2.345 |  0.023 |  0.050 |   0.100 | -12.500 |
+| /charlie/world       |    nan |    nan |    nan |    nan |     nan |     nan |
+| /dlio/odom_node/pose |  1.234 |  0.567 |  0.012 |  0.100 |  -0.200 |  45.300 |
++----------------------+--------+--------+--------+--------+---------+---------+
 ```
 
 `nan` means no messages arrived during the last display interval.
-
-## Topic convention
-
-Each agent ID maps to the topic `/<ID>/world`, expected to publish
-`geometry_msgs/PoseStamped` messages in the world frame.
